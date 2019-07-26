@@ -1,8 +1,8 @@
 extends Node2D
 
-const width = 30
-const height = 30
-const bombs = 50
+var width = 20
+var height = 20
+var bombs = 30
 var tiles = []
 var camera: Camera2D
 var start_pos:Vector2
@@ -11,22 +11,31 @@ var zoom_max = Vector2(2, 2)
 var zoom_min = Vector2(0.5, 0.5)
 var size: float
 var Tile = load("res://scripts/tile.gd")
+var que = []
 
 #dragging
 var dragging = false
 var startDragging = false
 
 func _ready():
+	set_process(true)
+	randomize()
 	camera = $Tiles/Camera2D
+	
+	#Create tiles
 	for y in range(height):
 		for x in range(width):
 			var i = y * width + x
-			var sprite = Tile.new(tiles, i, width)
-			size = sprite.getSprite().texture.get_width()
-			tiles.append(sprite)
-			$Tiles.add_child(sprite)
-			sprite.set_position(Vector2(x * size, y * size))
 			
+			var tile = Tile.new(tiles, i, que, width, height)
+			tile.set_position(Vector2(x * size, y * size))
+			tile.name = "%s,%s" % [x, y]
+			size = tile.getSprite().texture.get_width()
+			
+			tiles.append(tile)
+			$Tiles.add_child(tile)
+	
+	#Place bombs	
 	for i in range(bombs):
 		var index = randi()%tiles.size()
 		while tiles[index].isBomb():
@@ -35,8 +44,15 @@ func _ready():
 		
 
 func _process(delta):
-	if Input.action_press("WheelUp"):
-		camera.set_zoom(camera.zoom + Vector2(10, 10))
+	#clear queued up tiles before anything else
+	if que.size() > 0:
+		for t in que:
+			t.tile.setRevealed()
+			t.tile.countBombs(t.x, t.y)
+			que.erase(t)
+		return
+	
+	#Tile input
 	if Input.is_action_just_released("MouseLeft") && !dragging:
 		var mouse = $Tiles.get_local_mouse_position()
 		var x = floor((mouse.x + size / 2) / size)
@@ -50,6 +66,8 @@ func _process(delta):
 		var y = floor((mouse.y + size / 2) / size)
 		var i = y * width + x
 		tiles[i].setMarked()
+	
+	#Dragging
 	if Input.is_action_pressed("MouseLeft"):
 		if !startDragging:
 			start_pos = camera.position + camera.get_local_mouse_position()

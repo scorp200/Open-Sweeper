@@ -5,11 +5,13 @@ var _revealed = false
 var tiles:Array
 var index:int
 var width:int
+var height:int
 var count:int = -1
 var sprite: Sprite
+var label:Label
+var que:Array
 
-const pattern = [Vector2(0, -1), Vector2(0, 1), Vector2(-1, 0), Vector2(1, 0)]
-func _init(tiles, index, width):
+func _init(tiles, index, que, width, height):
 	sprite = Sprite.new()
 	sprite.texture = load("res://sprites/tile.png")
 	sprite.modulate = Color("#ef5350")
@@ -18,23 +20,26 @@ func _init(tiles, index, width):
 	self.tiles = tiles
 	self.index = index
 	self.width = width
+	self.height = height
+	self.que = que
 	
-	var text = Label.new()
+	var margin = width	
 	var font = load("res://font/joystix.tres") as DynamicFont
-	font.size = 35
-	text.add_font_override("font", font)
-	text.align = 1
-	text.valign = 1
-	var margin = width
-	text.margin_bottom = margin
-	text.margin_top = -margin
-	text.margin_left = -margin
-	text.margin_right = margin
-	text.rect_position = Vector2(-margin, -margin)
-	text.text = "%s" % count
-	text.visible = false
-	text.name = "count"
-	add_child(text)
+	font.size = 35	
+	
+	label = Label.new()
+	label.add_font_override("font", font)
+	label.align = 1
+	label.valign = 1
+	label.margin_bottom = margin
+	label.margin_top = -margin
+	label.margin_left = -margin
+	label.margin_right = margin
+	label.rect_position = Vector2(-margin, -margin)
+	label.text = "%s" % count
+	label.visible = false
+	label.name = "count"
+	add_child(label)
 	
 func isBomb():
 	return _isBomb
@@ -45,8 +50,8 @@ func setBomb():
 func setMarked():
 	if count != -1:
 		return
-	$count.text = "?"
-	$count.visible = true
+	label.text = "?"
+	label.visible = true
 
 func setRevealed():
 	if _revealed:
@@ -67,27 +72,38 @@ func countBombs(cx, cy):
 		for y in range(3):
 			var ny = (cy + y - 1)
 			var nx = (cx + x - 1)
+			if nx < 0 || nx >= width || ny < 0 || ny >= height: continue
+			
 			var i = ny * width + nx
 			if i >= 0 && i < tiles.size() && tiles[i].isBomb():
 				count += 1
+	
 	if count == 0:
 		revealeNeighbors(cx, cy)
-	if count > 0:
-		$count.text = "%s" % count
-		$count.visible = true
+	elif count > 0:
+		label.text = "%s" % count
+		label.visible = true
 	return count
 	
 func revealeNeighbors(cx, cy):
-	for p in pattern:
-		var ny = (cy + p.y)
-		var nx = (cx + p.x)
-		var i = ny * width + nx
-		if i >= 0 && i < tiles.size() && !tiles[i].isBomb():
-			tiles[i].setRevealed()
-			if tiles[i].countBombs(nx, ny) != 0 && count > 0:
-				return
+	for x in range(3):
+		for y in range(3):
+			if x == y: continue
 			
-	return true
+			var ny = (cy + y - 1)
+			var nx = (cx + x - 1)
+			if nx < 0 || nx >= width || ny < 0 || ny >= height: continue
+			
+			var i = ny * width + nx
+			if i < 0 && i >= tiles.size(): continue
+			
+			var tile = tiles[i] as Tile
+			
+			#Que up tile reveals since godot stack is really low, maybe a bug?
+			if tile.isBomb(): return
+			else:
+				que.append({"tile":tile, "x": nx, "y": ny})
+	return
 	
 func getSprite():
 	return sprite
