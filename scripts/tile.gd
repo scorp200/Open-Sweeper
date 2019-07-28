@@ -16,17 +16,17 @@ func _init(tiles, index, que, width, height):
 	sprite.texture = load("res://sprites/tile.png")
 	sprite.modulate = Color("#ef5350")
 	add_child(sprite)
-	
+
 	self.tiles = tiles
 	self.index = index
 	self.width = width
 	self.height = height
 	self.que = que
-	
-	var margin = width	
+
+	var margin = width
 	var font = load("res://font/joystix.tres") as DynamicFont
-	font.size = 35	
-	
+	font.size = 30
+
 	label = Label.new()
 	label.add_font_override("font", font)
 	label.align = 1
@@ -40,10 +40,10 @@ func _init(tiles, index, que, width, height):
 	label.visible = false
 	label.name = "count"
 	add_child(label)
-	
+
 func isBomb():
 	return _isBomb
-	
+
 func setBomb():
 	_isBomb = true
 
@@ -73,37 +73,37 @@ func countBombs(cx, cy):
 			var ny = (cy + y - 1)
 			var nx = (cx + x - 1)
 			if nx < 0 || nx >= width || ny < 0 || ny >= height: continue
-			
+
 			var i = ny * width + nx
 			if i >= 0 && i < tiles.size() && tiles[i].isBomb():
 				count += 1
-	
+
 	if count == 0:
 		revealeNeighbors(cx, cy)
 	elif count > 0:
 		label.text = "%s" % count
 		label.visible = true
 	return count
-	
+
 func revealeNeighbors(cx, cy):
 	for x in range(3):
 		for y in range(3):
 			if x == y: continue
-			
+
 			var ny = (cy + y - 1)
 			var nx = (cx + x - 1)
 			if nx < 0 || nx >= width || ny < 0 || ny >= height: continue
-			
+
 			var i = ny * width + nx
 			if i < 0 && i >= tiles.size(): continue
-			
+
 			var tile = tiles[i] as Tile
-			
+
 			#Que up tile reveals since godot stack is really low, maybe a bug?
 			if tile.isBomb(): return
 			else:
 				que.append({"tile":tile, "x": nx, "y": ny})
 	return
-	
+
 func getSprite():
 	return sprite
