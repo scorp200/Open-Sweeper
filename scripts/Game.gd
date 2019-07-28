@@ -25,32 +25,32 @@ var height:int = 20
 
 func _ready():
 	set_process(true)
-	window = get_viewport_rect().size	
+	window = get_viewport_rect().size
 	randomize()
 	camera = $Camera2D
 
 	#Create tiles
 	for y in range(height):
 		for x in range(width):
-			var i = y * width + x						
+			var i = y * width + x
 			var tile = Tile.new(tiles, i, que, width, height)
 			if i == 0:
 				size = tile.getSprite().texture.get_width()
 				half_size = size / 2
 				width_size = size * width
 				height_size = size * height
-				
+
 			tile.set_position(Vector2(x * size, y * size))
 			tile.name = "%s,%s" % [x, y]
-			
-				
-			
+
+
+
 			tiles.append(tile)
 			$Tiles.add_child(tile)
-	
+
 	padding = size * 2
 	camera.position = Vector2(width / 2 * size, height / 2 * size)
-	
+
 func _process(delta):
 	#clear queued up tiles before anything else
 	if que.size() > 0:
@@ -76,12 +76,12 @@ func _process(delta):
 							index = randi()%tiles.size()
 						tiles[index].setBomb()
 					firstTouch = false
-	
+
 				tiles[i].setRevealed()
 				tiles[i].countBombs(x, y)
-			
+
 		dragging = false
-		
+
 	if Input.is_action_just_released("MouseRight"):
 		#Mark tile as "?"
 		if !dragging:
@@ -90,9 +90,9 @@ func _process(delta):
 			var y = floor((mouse.y + half_size) / size)
 			var i = y * width + x
 			tiles[i].setMarked()
-	
-	
-		
+
+
+
 func snapCamera():
 	var half_port = get_viewport_rect().size / 2
 	var offset:float
@@ -122,7 +122,7 @@ func zoom_at_point(zoom):
 	var offset = (get_global_mouse_position() - camera.position) * (camera.zoom - new_zoom) + old
 	camera.position = offset
 	camera.zoom = new_zoom
-	
+
 func _input(event):
 	if event is InputEventMouseButton:
 		event = event as InputEventMouseButton
